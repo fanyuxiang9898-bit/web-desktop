@@ -1,0 +1,11 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '..');
+const out = path.join(root, 'dist');
+fs.mkdirSync(path.join(out, 'vendor'), { recursive: true });
+for (const name of ['manifest.json', 'popup.html', 'popup.js', 'background.js']) fs.copyFileSync(path.join(root, 'extension', name), path.join(out, name));
+for (const name of ['app.js', 'layout.js']) fs.copyFileSync(path.join(root, 'src', name), path.join(out, name));
+fs.copyFileSync(path.join(root, 'node_modules/gridstack/dist/gridstack-all.js'), path.join(out, 'vendor/gridstack-all.js'));
+fs.copyFileSync(path.join(root, 'node_modules/gridstack/LICENSE'), path.join(out, 'vendor/LICENSE.gridstack'));
+fs.copyFileSync(path.join(root, 'node_modules/gridstack/dist/gridstack-all.js.LICENSE.txt'), path.join(out, 'vendor/gridstack-all.js.LICENSE.txt'));
+console.log('Built extension:', out);

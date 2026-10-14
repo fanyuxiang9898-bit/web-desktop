@@ -1,0 +1,40 @@
+const fs=require('node:fs');const path=require('node:path');const assert=require('node:assert/strict');
+const candidates=[path.resolve(__dirname,'../node_modules/playwright'),'D:/Codex/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'];
+const {chromium}=require(candidates.find(p=>fs.existsSync(p))||'playwright');
+const root=path.resolve(__dirname,'..'),out=path.join(root,'test-results');
+const profile=path.join(root,'work','extension-profile-'+Date.now());
+const fixture=path.join(root,'work','extension-fixture');fs.mkdirSync(fixture,{recursive:true});fs.cpSync(path.join(root,'dist'),fixture,{recursive:true});
+// Only the isolated test fixture pre-grants loopback access; production requests it.
+const manifest=JSON.parse(fs.readFileSync(path.join(fixture,'manifest.json')));
+manifest.host_permissions=['http://127.0.0.1/*'];fs.writeFileSync(path.join(fixture,'manifest.json'),JSON.stringify(manifest,null,2));
+const executablePath=process.argv[2]||'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
+const args=['--disable-extensions-except='+fixture,'--load-extension='+fixture];
+const launch=()=>chromium.launchPersistentContext(profile,{executablePath,headless:true,args,viewport:{width:1440,height:1100}});
+const checks=[];const pass=s=>{checks.push(s);console.log('PASS',s);};
+(async()=>{let context=await launch();try{
+const manager=context.pages()[0];await manager.goto('edge://extensions');await manager.locator('extension-card').waitFor();
+const data=await manager.locator('extension-card').evaluate(e=>({id:e.data.id,enabled:e.data.enabled,errors:e.data.errors}));assert.ok(data.enabled);assert.deepEqual(data.errors,[]);pass('packaged MV3 extension loads in Edge');
+const control=await context.newPage();await control.goto('chrome-extension://'+data.id+'/popup.html');
+assert.equal(await control.locator('#edit').count(),1);pass('packaged popup renders');
+const target=await context.newPage();await target.goto('http://127.0.0.1:4178/demo/extension.html');
+await control.evaluate(async()=>{
+  await chrome.storage.local.set({enabledOrigins:['http://127.0.0.1/*']});
+  const result=await chrome.runtime.sendMessage({type:'wd-reconcile'});if(!result.ok)throw new Error(result.error);
+  const [tab]=await chrome.tabs.query({url:'http://127.0.0.1:4178/demo/extension.html'});
+  await chrome.scripting.executeScript({target:{tabId:tab.id},files:['vendor/gridstack-all.js','layout.js','app.js']});
+  await chrome.scripting.executeScript({target:{tabId:tab.id},func:()=>__webDesktop.open()});
+});
+await target.locator('#web-desktop-ui #pick').click();
+const region=await target.locator('#dashboard').boundingBox();
+await target.mouse.move(region.x+8,region.y+254);await target.mouse.click(region.x+8,region.y+254);
+await target.locator('#web-desktop-ui .tile').first().waitFor();pass('actual content script picks a region through UI in isolated world');
+await target.locator('#web-desktop-ui #done').click();await target.locator('#increment').click();assert.equal(await target.locator('#count').textContent(),'1');pass('original page event works across extension isolated world');
+const stored=await control.evaluate(async()=>{const d=await chrome.storage.local.get(null);return Object.values(d).find(v=>v.version===1);});assert.ok(stored);assert.equal(stored.items.length,6);pass('layout persists in real chrome.storage.local');
+await target.reload();await target.waitForFunction(()=>document.querySelector('#dashboard').style.position==='relative');pass('registered content script automatically restores after reload');
+await context.close();context=await launch();const reopened=context.pages()[0];
+const diagnose=await context.newPage();await diagnose.goto('chrome-extension://'+data.id+'/popup.html');
+await diagnose.waitForFunction(async()=>(await chrome.scripting.getRegisteredContentScripts()).length>0);
+await reopened.goto('http://127.0.0.1:4178/demo/extension.html');await reopened.waitForFunction(()=>document.querySelector('#dashboard').style.position==='relative');pass('registration and extension storage survive full browser restart');
+await reopened.locator('#web-desktop-ui #badge').click();await reopened.locator('#web-desktop-ui #restore').click();await reopened.reload();await reopened.waitForSelector('#web-desktop-ui',{state:'attached'});assert.equal(await reopened.locator('#dashboard').evaluate(e=>e.style.position),'');pass('restore clears persisted extension layout');
+fs.writeFileSync(path.join(out,'extension-results.json'),JSON.stringify({passed:checks.length,checks,limitation:'Loopback host permission pre-granted only in test fixture; native permission dialog not automated.'},null,2));
+}finally{await context.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

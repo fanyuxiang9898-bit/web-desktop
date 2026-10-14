@@ -1,0 +1,11 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+global.self=globalThis;
+global.GridStack=require('../node_modules/gridstack/dist/gridstack-all.js');
+const L=require('../src/layout.js');
+const initial=()=>Array.from({length:6},(_,i)=>({id:String(i),x:(i%3)*2,y:Math.floor(i/3)*2,w:2,h:2}));
+test('same-size occupied drop exchanges positions and retains every tile',()=>{const n=L.change(initial(),6,'0',{x:2,y:0},'1');assert.deepEqual(n.find(n=>n.id==='0'),{id:'0',x:2,y:0,w:2,h:2});assert.equal(n.find(n=>n.id==='1').x,0);assert.ok(L.validate(n,6));});
+test('shrink fills a newly available slot without collisions',()=>{const start=[{id:'a',x:0,y:0,w:4,h:2},{id:'b',x:0,y:2,w:2,h:1}];const n=L.change(start,4,'a',{w:2,h:1});assert.equal(n.find(n=>n.id==='b').y,0);assert.equal(n.find(n=>n.id==='b').x,2);assert.ok(L.validate(n,4));});
+test('enlarge and unequal swap retain nodes and prevent overlap',()=>{let n=L.change(initial(),6,'0',{w:4,h:3});n=L.change(n,6,'0',{},'4');assert.equal(n.length,6);assert.ok(L.validate(n,6));assert.equal(n.find(n=>n.id==='0').w,4);});
+test('random gestures never lose or overlap tiles',()=>{let seed=831,n=initial();const rand=()=>((seed=(seed*1664525+1013904223)>>>0)/2**32);for(let i=0;i<250;i++){const id=String(Math.floor(rand()*6));n=L.change(n,6,id,{x:Math.floor(rand()*6),y:Math.floor(rand()*5),w:1+Math.floor(rand()*4),h:1+Math.floor(rand()*3)});assert.ok(L.validate(n,6));assert.equal(new Set(n.map(x=>x.id)).size,6);}});
+test('invalid saved payload is rejected',()=>{assert.equal(L.validate([{id:'x',x:0,y:0,w:999,h:1}],6),false);assert.equal(L.validate([...initial(),initial()[0]],6),false);});

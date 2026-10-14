@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>网页桌面 · 本地实验室</title><link rel="stylesheet" href="/demo/style.css"></head>
+<body><header><a class="brand" href="/">◈ <b>网页桌面</b><span>LOCAL LAB</span></a><button id="launch">开启布局编辑 ↗</button></header>
+<main><section class="intro"><div class="kicker">YOUR WEB. YOUR SPACE.</div><h1>把网页，摆成你的样子。</h1><p>像整理手机桌面一样，让每个常用功能各就其位。<br>直接拖动交换，拉角缩放，空位自动补齐。</p><div class="steps"><span>01 选择区域</span><i>→</i><span>02 拖动与缩放</span><i>→</i><span>03 完成，正常使用</span></div></section>
+<div class="section-title"><h2>我的工作台 <span>6 个真实交互模块</span></h2><button id="demo-edit">编辑这个工作台</button></div>
+<section id="dashboard" aria-label="工作台">
+<article id="search-card" class="card search"><div class="icon">⌕</div><h3>快速搜索</h3><p>输入内容，验证表单仍然可用。</p><form id="search-form"><input id="query" placeholder="想找什么？" required><button>搜索</button></form><output id="search-result">等待搜索</output></article>
+<article id="counter-card" class="card counter"><div class="icon">↗</div><h3>今日专注</h3><div class="metric"><span id="count">0</span><small>次完成</small></div><button id="increment">完成一次 +1</button></article>
+<article id="tabs-card" class="card"><div class="icon">▤</div><h3>项目进度</h3><div id="tabs" role="tablist"><button role="tab" aria-selected="true" data-tab="进行中">进行中</button><button role="tab" aria-selected="false" data-tab="已完成">已完成</button></div><p id="tab-content">进行中：网页桌面原型</p></article>
+<article id="notes-card" class="card notes"><div class="icon">✎</div><h3>随手记录</h3><textarea id="notes" placeholder="你的文字不会因调整布局而丢失…"></textarea><small>试试先输入，再调整位置。</small></article>
+<article id="links-card" class="card"><div class="icon">↗</div><h3>常用入口</h3><a href="#details" id="details-link">查看实验说明 <span>↗</span></a><p>链接、键盘焦点与原节点保持连接。</p></article>
+<article id="settings-card" class="card settings"><div class="icon">◌</div><h3>工作偏好</h3><label><input id="quiet" type="checkbox"> 专注模式</label><p id="quiet-state">提醒已开启</p><select id="theme-choice" aria-label="颜色偏好"><option>海蓝</option><option>薄荷</option><option>暖砂</option></select></article>
+</section>
+<section id="details" class="footnote"><b>本地实验说明</b><p>这不是截图：上面每张卡片都是真实网页元素。编辑器只修改布局，原节点不复制、不移动到其他父节点。完成后可测试搜索、计数、标签、输入和链接。</p><p>本地演示使用 localStorage；扩展使用 chrome.storage.local。结构被网站重新创建时，会停止布局并恢复，避免干扰网站渲染。</p><button id="mutate">实验：让网站新增一张卡片</button></section></main>
+<script src="/demo/site.js"></script><script src="/dist/vendor/gridstack-all.js"></script><script src="/dist/layout.js"></script><script src="/dist/app.js"></script><script src="/demo/launch.js"></script></body></html>
