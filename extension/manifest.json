@@ -1,10 +1,22 @@
 {
   "manifest_version": 3,
   "name": "网页桌面 · Web Desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "把网页区域变成可缩放、交换、自动补位的桌面式网格，保留原元素并随时复原。",
-  "permissions": ["activeTab", "scripting", "storage"],
-  "optional_host_permissions": ["http://*/*", "https://*/*"],
-  "background": { "service_worker": "background.js" },
-  "action": { "default_popup": "popup.html", "default_title": "网页桌面" }
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "网页桌面"
+  }
 }

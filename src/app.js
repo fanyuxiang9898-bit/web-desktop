@@ -32,8 +32,10 @@
     if (!ledger.has(el)) ledger.set(el, new Map());
     const record = ledger.get(el);
     if (!record.has(prop)) record.set(prop, { value: el.style.getPropertyValue(prop), priority: el.style.getPropertyPriority(prop), applied: '' });
-    record.get(prop).applied = value;
     el.style.setProperty(prop, value, 'important');
+    // CSSOM normalizes fractional pixel values. Compare the actual serialized
+    // value on release, while still preserving intervening changes by the site.
+    record.get(prop).applied = el.style.getPropertyValue(prop);
   }
   function release() {
     gesture = null; $('.ghost').hidden = true;
@@ -71,11 +73,12 @@
     if (!active) return;
     const { container, nodes, items, cols, cell } = active;
     const gap = 12;
-    const width = container.clientWidth;
-    const cw = width / cols;
     setStyle(container, 'position', 'relative'); setStyle(container, 'display', 'block');
     setStyle(container, 'height', (Math.max(...nodes.map(n => n.y + n.h), 1) * cell) + 'px');
     setStyle(container, 'min-height', '0px'); setStyle(container, 'padding', '0px');
+    // Measure after changing padding/display: content-box regions otherwise
+    // use stale geometry on the first render and jump on the next gesture.
+    const cw = container.clientWidth / cols;
     for (const n of nodes) {
       const el = items.find(i => i.id === n.id).el;
       for (const [prop, value] of Object.entries({ position:'absolute', left:(n.x * cw + gap/2)+'px', top:(n.y * cell + gap/2)+'px', width:Math.max(1,n.w*cw-gap)+'px', height:(n.h*cell-gap)+'px', 'box-sizing':'border-box', margin:'0px', 'min-width':'0px', 'max-width':'none', 'min-height':'0px', 'max-height':'none', transform:'none', overflow:'auto' })) setStyle(el, prop, value);

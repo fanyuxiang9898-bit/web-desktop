@@ -1,6 +1,6 @@
 {
   "name": "web-desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Turn existing webpage regions into a reversible desktop-like grid without cloning DOM nodes.",
   "scripts": {
@@ -8,7 +8,10 @@
     "start": "node scripts/serve.cjs",
     "test": "node --test tests/layout.test.cjs",
     "test:browser": "node tests/browser.cjs",
-    "test:extension": "node tests/extension.cjs"
+    "test:extension": "node tests/extension.cjs",
+    "test:real-sites": "node tests/real-sites.cjs"
   },
-  "dependencies": { "gridstack": "14.0.0" }
+  "dependencies": {
+    "gridstack": "14.0.0"
+  }
 }
